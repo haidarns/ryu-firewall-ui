@@ -1,7 +1,7 @@
 # RYU REST Firewall UI Dashboard
 Web UI Dashboard for OVS based Firewall using RYU Controller.
 
-RYU Firewall Guide : [RYU Rest Firewall](https://osrg.github.io/ryu-book/en/html/rest_firewall.html)
+RYU Firewall Guide : [RYU REST API Firewall](https://osrg.github.io/ryu-book/en/html/rest_firewall.html)
 
 ## Specification :
 ### Web Apps
