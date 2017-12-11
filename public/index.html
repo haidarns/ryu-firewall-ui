@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+	<title>OVS Firewall - by HNSLabs</title>     
+	<link href="/libs/css/bootstrap.min.css" rel="stylesheet"> 
+
+	<script src="/libs/js/jquery.min.js"></script>
+	<script src="/libs/js/popper.min.js"></script>
+	<script src="/libs/js/bootstrap.min.js"></script>
+
+	<link rel="shortcut icon" href="" type="image/x-icon">
+
+	<style type="text/css">
+	#myTabContent {
+		margin-top: 1rem;
+	}
+</style>
+<script>
+</script>
+
+</head>
+
+<body>
+	<div class="container" ng-controller="AppCtrl">
+		<br/>
+		<h1 align="center"><u>RYU OVS based Firewall Dashboard</u></h1><br/><br/>
+		<button class="btn btn-primary btn-sm" data-target="#modalRules" data-toggle="modal">Add New Rules</button><br/><br/>
+		<table class="table">          
+			<thead>
+				<tr>
+					<td>Switch ID</td>
+					<td>Status</td>
+					<td></td>
+				</tr>
+			</thead>
+
+			<tbody>
+				<tr ng-if="switches.length==undefined">
+					<td class="text-center" colspan="3">No Switch Found</td>
+				</tr>
+				<tr ng-repeat="switch in switches">
+					<td>{{switch.switch_id}}</td>
+					<td>{{switch.status}}d</td>
+					<td>
+						<button class="btn btn-success btn-sm" ng-if="switch.status=='disable'" ng-click="enableFirewall(switch.switch_id)">Enable</button>
+						<button class="btn btn-danger btn-sm" ng-if="switch.status=='enable'" ng-click="disableFirewall(switch.switch_id)">Disable</button>
+						<button class="btn btn-secondary btn-sm" ng-click="modalFirewall(switch.switch_id)" data-target="#modalSw" data-toggle="modal">Show</button>
+					</td>
+				</tr> 
+			</tbody>
+		</table>
+
+		<div class="modal fade" id="modalRules" role="dialog" >
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>Add New Rules</h3>
+					</div>
+					<div class="modal-body">
+						<form>
+							<div class="form-group">
+								<div class="row">
+									<div class="col">
+										<label for="inSwitch">Switch</label>
+										<select class="form-control" id="inSwitch" ng-model="nrswitch">
+											<option value="all" selected>All</option>
+											<option ng-repeat="switch in switches" ng-bind="switch.switch_id" value="{{switch.switch_id}}">{{switch.switch_id}}</option>
+										</select>
+									</div>
+									<div class="col">
+										<label for="inVlan">VLAN ID</label>
+										<input type="text" class="form-control" id="inVlan" placeholder="all or (0 - 65535)" ng-model="nrvlan">
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="row">
+									<div class="col">
+										<label for="inPriority">Priority</label>
+										<input type="number" class="form-control" id="inPriority" placeholder="(0 - 65535)" ng-model="nr.priority">
+									</div>
+									<div class="col">
+										<label for="inPort">In Port</label>
+										<input type="number" class="form-control" id="inPort" placeholder="(0 - 65535)" ng-model="nr.in_port">
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="row">
+									<div class="col">
+										<label for="inMacSrc">MAC Source</label>
+										<input type="text" class="form-control" id="inMacSrc" placeholder="xx:xx:xx:xx:xx:xx" ng-model="nr.dl_src">
+									</div>
+									<div class="col">
+										<label for="inMacSrc">MAC Destination</label>
+										<input type="text" class="form-control" id="inMacSrc" placeholder="xx:xx:xx:xx:xx:xx" ng-model="nr.dl_dst">
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inType">Data Link Type</label>
+								<select class="form-control" id="inType" ng-model="nr.dl_type">
+									<option value="">Any</option>
+									<option value="IPv4">IPv4</option>
+									<option value="IPv6">IPv6</option>
+									<option value="ARP">ARP</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<div class="row">
+									<div class="col">
+										<label for="inIPv4Src">IPv4 Network Source</label>
+										<input type="text" class="form-control" ng-model="nr.nw_src" id="inIPv4Src" placeholder="xxx.xxx.xxx.xxx/xx">
+									</div>
+									<div class="col">
+										<label for="inIPv4Dst">IPv4 Network Destination</label>
+										<input type="text" class="form-control" ng-model="nr.nw_dst" id="inIPv4Dst" placeholder="xxx.xxx.xxx.xxx/xx">
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="row">
+									<div class="col">
+										<label for="inIPv6Src">IPv6 Network Source</label>
+										<input type="text" class="form-control" id="inIPv6Src" placeholder="xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx/xx" ng-model="nr.ipv6_src">
+									</div>
+									<div class="col">
+										<label for="inIPv6Src">IPv6 Network Destination</label>
+										<input type="text" class="form-control" id="inIPv6Src" placeholder="xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx/xx" ng-model="nr.ivp_6dst">
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inProtocol">Protocol</label>
+								<select class="form-control" id="inProtocol" ng-model="nr.nw_proto">
+									<option value="">Any</option>
+									<option value="TCP">TCP</option>
+									<option value="UDP">UDP</option>
+									<option value="ICMP">ICMP</option>
+									<option value="ICMPv6">ICMPv6</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<div class="row">
+									<div class="col">
+										<label for="inPortSrc">Port Source</label>
+										<input type="number" class="form-control" ng-model="nr.tp_src" id="inPortSrc" placeholder="(0 - 65535)">
+									</div>
+									<div class="col">
+										<label for="inPortSrc">Port Destination</label>
+										<input type="number" class="form-control" ng-model="nr.tp_dst" id="inPortSrc" placeholder="(0 - 65535)">
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inAction">Action</label>
+								<select class="form-control" id="inAction" ng-model="nr.actions">
+									<option value="">Allow</option>
+									<option value="DENY">Deny</option>
+								</select>
+							</div>
+							<button type="submit" class="btn btn-primary" ng-click="saveRules()" data-dismiss="modal">Save</button>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="modalSw" role="dialog" >
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>Switch {{rules.switch_id}}</h3>
+					</div>
+					<div class="modal-body">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Rules ID</th>
+									<th>VLAN ID</th>
+									<th>Match</th>
+									<th>Actions</th>
+									<th>Priority</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody ng-repeat="vlan in rules.access_control_list">
+								<tr ng-repeat="rule in vlan.rules | orderBy:'rule_id'">
+									<td>{{rule.rule_id}}</td>
+									<td>{{vlan.vlan_id}}</td>
+									<td>
+										<span ng-repeat="(k, v) in rule">
+											<span ng-if="k != 'rule_id' && k != 'actions' && k != 'priority' && k != 'dl_vlan'">
+												{{k}}: {{v}} <br>
+											</span>
+										</span>
+									</td>
+									<td>{{rule.actions}}</td>
+									<td>{{rule.priority}}</td>
+									<td><a href="#" class="text-danger" data-dismiss="modal" ng-click="delRules(rules.switch_id, vlan.vlan_id, rule.rule_id)">X</a></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="/libs/js/angular.min.js"></script>  
+	<script src="/controllers/controller.js"></script>
+</body>
+
+</html>
